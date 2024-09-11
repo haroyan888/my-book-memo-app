@@ -1,0 +1,1 @@
+CREATE DATABASE my_book_memo_db;

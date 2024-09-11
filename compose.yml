@@ -1,0 +1,20 @@
+name: my-book-memo-app
+
+services:
+  db:
+    build:
+      context: .
+      dockerfile: db.Dockerfile
+    container_name: my_book_memo_db
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    environment:
+      - "POSTGRES_USER=${DB_USER}"
+      - "POSTGRES_PASSWORD=${DB_PASSWORD}"
+    volumes:
+      - ./db-store:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d
+volumes:
+  db-store:
