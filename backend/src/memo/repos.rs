@@ -60,13 +60,13 @@ impl MemoRepository for MemoRepositoryForDB {
 				SELECT * FROM memo WHERE id = $1;
       "#,
 		)
-			.bind(id)
-			.fetch_one(conn)
-			.await
-			.map_err(|err| match err {
-				sqlx::Error::RowNotFound => RepositoryError::NotFound(id.to_string()),
-				_ => RepositoryError::Unexpected(err.to_string()),
-			})?;
+		.bind(id)
+		.fetch_one(conn)
+		.await
+		.map_err(|err| match err {
+			sqlx::Error::RowNotFound => RepositoryError::NotFound(id.to_string()),
+			_ => RepositoryError::Unexpected(err.to_string()),
+		})?;
 
 		Ok(memo)
 	}
@@ -83,13 +83,13 @@ impl MemoRepository for MemoRepositoryForDB {
 				SELECT * FROM memo WHERE isbn_13 = $1;
       "#,
 		)
-			.bind(&isbn_13)
-			.fetch_all(conn)
-			.await
-			.map_err(|err| match err {
-				sqlx::Error::RowNotFound => RepositoryError::NotFound(isbn_13.to_string()),
-				_ => RepositoryError::Unexpected(err.to_string()),
-			})?;
+		.bind(isbn_13)
+		.fetch_all(conn)
+		.await
+		.map_err(|err| match err {
+			sqlx::Error::RowNotFound => RepositoryError::NotFound(isbn_13.to_string()),
+			_ => RepositoryError::Unexpected(err.to_string()),
+		})?;
 
 		Ok(memo)
 	}
@@ -102,24 +102,27 @@ impl MemoRepository for MemoRepositoryForDB {
 			.map_err(|err| RepositoryError::Unexpected(err.to_string()))?;
 
 		// メモを登録したい本が存在しているかを探す
-		let book_exist: bool = sqlx::query_scalar(r#"SELECT EXISTS(SELECT 1 FROM books WHERE isbn_13 = $1);"#)
-			.bind(isbn_13)
-			.fetch_one(conn.borrow_mut())
-			.await
-			.map_err(|err| RepositoryError::Unexpected(err.to_string()))?;
+		let book_exist: bool =
+			sqlx::query_scalar(r#"SELECT EXISTS(SELECT 1 FROM books WHERE isbn_13 = $1);"#)
+				.bind(isbn_13)
+				.fetch_one(conn.borrow_mut())
+				.await
+				.map_err(|err| RepositoryError::Unexpected(err.to_string()))?;
 		if !book_exist {
 			return Err(RepositoryError::NotFound(isbn_13.to_string()));
 		};
 
 		let memo_id = uuid::Uuid::new_v4().to_string();
 
-		let created_memo = sqlx::query_as::<_, Memo>(r#"INSERT INTO memo (id, isbn_13, text) VALUES ($1, $2, $3) RETURNING *;"#)
-			.bind(&memo_id)
-			.bind(&isbn_13)
-			.bind(&payload.text)
-			.fetch_one(conn)
-			.await
-			.map_err(|err| RepositoryError::Unexpected(err.to_string()))?;
+		let created_memo = sqlx::query_as::<_, Memo>(
+			r#"INSERT INTO memo (id, isbn_13, text) VALUES ($1, $2, $3) RETURNING *;"#,
+		)
+		.bind(&memo_id)
+		.bind(isbn_13)
+		.bind(&payload.text)
+		.fetch_one(conn)
+		.await
+		.map_err(|err| RepositoryError::Unexpected(err.to_string()))?;
 
 		tx.commit()
 			.await
@@ -129,15 +132,22 @@ impl MemoRepository for MemoRepositoryForDB {
 	}
 
 	async fn delete(&self, id: &str) -> Result<(), RepositoryError> {
-		let mut tx = self.start_transaction().await.map_err(|err| RepositoryError::Unexpected(err.to_string()))?;
-		let conn = tx.acquire().await.map_err(|err| RepositoryError::Unexpected(err.to_string()))?;
-
-		// 削除したいメモが存在しているかを探す
-		let memo_exist: bool = sqlx::query_scalar(r#"SELECT EXISTS(SELECT 1 FROM memo WHERE id = $1);"#)
-			.bind(id)
-			.fetch_one(conn.borrow_mut())
+		let mut tx = self
+			.start_transaction()
 			.await
 			.map_err(|err| RepositoryError::Unexpected(err.to_string()))?;
+		let conn = tx
+			.acquire()
+			.await
+			.map_err(|err| RepositoryError::Unexpected(err.to_string()))?;
+
+		// 削除したいメモが存在しているかを探す
+		let memo_exist: bool =
+			sqlx::query_scalar(r#"SELECT EXISTS(SELECT 1 FROM memo WHERE id = $1);"#)
+				.bind(id)
+				.fetch_one(conn.borrow_mut())
+				.await
+				.map_err(|err| RepositoryError::Unexpected(err.to_string()))?;
 		if !memo_exist {
 			return Err(RepositoryError::NotFound(id.to_string()));
 		};
@@ -145,9 +155,12 @@ impl MemoRepository for MemoRepositoryForDB {
 		sqlx::query(r#"DELETE FROM memo WHERE id = $1 returning *;"#)
 			.bind(id)
 			.execute(conn)
-			.await.map_err(|err| RepositoryError::Unexpected(err.to_string()))?;
+			.await
+			.map_err(|err| RepositoryError::Unexpected(err.to_string()))?;
 
-		tx.commit().await.map_err(|err| RepositoryError::Unexpected(err.to_string()))?;
+		tx.commit()
+			.await
+			.map_err(|err| RepositoryError::Unexpected(err.to_string()))?;
 
 		Ok(())
 	}

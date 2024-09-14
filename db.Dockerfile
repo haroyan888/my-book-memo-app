@@ -2,6 +2,8 @@ FROM postgres:latest
 
 COPY ./init/init.sql /docker-entrypoint-initdb.d/init.sql
 
+RUN apt-get update && apt-get install locales-all
+
 # Time ZoneAc
 ENV TZ Asia/Tokyo
 
