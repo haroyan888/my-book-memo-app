@@ -4,6 +4,6 @@ export default interface Book {
 	description: string,
 	authors: string[],
 	publisher: string,
-	publishDate: string,
+	published_date: string,
 	image_url: string,
 };

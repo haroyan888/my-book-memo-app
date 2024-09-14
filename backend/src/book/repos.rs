@@ -1,8 +1,8 @@
+use super::super::repos::RepositoryError;
 use axum::async_trait;
 use serde::Serialize;
 use sqlx::{Acquire, FromRow, PgPool, Transaction};
 use std::{borrow::BorrowMut, sync::Arc};
-use super::super::repos::RepositoryError;
 
 #[derive(Serialize, Debug, FromRow, PartialEq)]
 pub struct BookInfo {
@@ -85,9 +85,9 @@ impl BookRepository for BookRepositoryForDB {
 				) as authors FROM books;
       "#,
 		)
-			.fetch_all(conn)
-			.await
-			.map_err(|err| RepositoryError::Unexpected(err.to_string()))?;
+		.fetch_all(conn)
+		.await
+		.map_err(|err| RepositoryError::Unexpected(err.to_string()))?;
 
 		Ok(book_info)
 	}
@@ -135,20 +135,45 @@ impl BookRepository for BookRepositoryForDB {
 	}
 
 	async fn delete(&self, isbn_13: &str) -> Result<(), RepositoryError> {
-		let mut tx = self.start_transaction().await.map_err(|err| RepositoryError::Unexpected(err.to_string()))?;
-		let conn = tx.acquire().await.map_err(|err| RepositoryError::Unexpected(err.to_string()))?;
+		let mut tx = self
+			.start_transaction()
+			.await
+			.map_err(|err| RepositoryError::Unexpected(err.to_string()))?;
+		let conn = tx
+			.acquire()
+			.await
+			.map_err(|err| RepositoryError::Unexpected(err.to_string()))?;
 
-		sqlx::query(r#"DELETE FROM authors WHERE isbn_13 = $1"#).bind(isbn_13).execute(conn.borrow_mut()).await.map_err(|err| match err {
-			sqlx::Error::RowNotFound => RepositoryError::NotFound(isbn_13.to_string()),
-			_ => RepositoryError::Unexpected(err.to_string()),
-		})?;
+		sqlx::query(r#"DELETE FROM memo WHERE isbn_13 = $1"#)
+			.bind(isbn_13)
+			.execute(conn.borrow_mut())
+			.await
+			.map_err(|err| match err {
+				sqlx::Error::RowNotFound => RepositoryError::NotFound(isbn_13.to_string()),
+				_ => RepositoryError::Unexpected(err.to_string()),
+			})?;
 
-		sqlx::query(r#"DELETE FROM books WHERE isbn_13 = $1"#).bind(isbn_13).execute(conn.borrow_mut()).await.map_err(|err| match err {
-			sqlx::Error::RowNotFound => RepositoryError::NotFound(isbn_13.to_string()),
-			_ => RepositoryError::Unexpected(err.to_string()),
-		})?;
+		sqlx::query(r#"DELETE FROM authors WHERE isbn_13 = $1"#)
+			.bind(isbn_13)
+			.execute(conn.borrow_mut())
+			.await
+			.map_err(|err| match err {
+				sqlx::Error::RowNotFound => RepositoryError::NotFound(isbn_13.to_string()),
+				_ => RepositoryError::Unexpected(err.to_string()),
+			})?;
 
-		tx.commit().await.map_err(|err| RepositoryError::Unexpected(err.to_string()))?;
+		sqlx::query(r#"DELETE FROM books WHERE isbn_13 = $1"#)
+			.bind(isbn_13)
+			.execute(conn.borrow_mut())
+			.await
+			.map_err(|err| match err {
+				sqlx::Error::RowNotFound => RepositoryError::NotFound(isbn_13.to_string()),
+				_ => RepositoryError::Unexpected(err.to_string()),
+			})?;
+
+		tx.commit()
+			.await
+			.map_err(|err| RepositoryError::Unexpected(err.to_string()))?;
 
 		Ok(())
 	}

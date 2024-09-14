@@ -47,7 +47,7 @@ export default function Index() {
       <div className="font-sans p-4 flex flex-wrap justify-content-center">
         {books
           ? books.map((book) =>
-            <BookCard book={book} key={book.isbn_13}/>)
+            <BookCard book={book} key={book.isbn_13} handleAfterDelete={getBooksInfo}/>)
           : undefined
         }
       </div>
