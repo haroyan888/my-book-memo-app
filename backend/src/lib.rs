@@ -1,9 +1,8 @@
-pub mod book;
-pub mod memo;
+pub mod handler;
 pub mod repos;
 
 #[derive(Clone)]
 pub struct AppState {
-	pub book_repos: book::repos::BookRepositoryForDB,
-	pub memo_repos: memo::repos::MemoRepositoryForDB,
+	pub book_repos: repos::book::BookRepositoryForDB,
+	pub memo_repos: repos::memo::MemoRepositoryForDB,
 }

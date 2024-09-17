@@ -5,13 +5,12 @@ use axum::{
 };
 use std::sync::Arc;
 
-use crate::memo::repos::{CreateMemo, MemoRepository};
 use crate::repos::handle_repository_error;
+use crate::repos::memo::{CreateMemo, MemoRepository};
 use crate::AppState;
 
 pub fn create_memo_app() -> axum::Router<Arc<AppState>> {
-	axum::Router::new()
-		.route("/:id", axum::routing::get(find_memo).delete(delete_memo))
+	axum::Router::new().route("/:id", axum::routing::get(find_memo).delete(delete_memo))
 }
 
 // 登録済みのメモを全て返すハンドラ

@@ -2,18 +2,19 @@ use sqlx::PgPool;
 use std::sync::Arc;
 use tower_http::cors;
 
-use backend::book::{handler::create_book_app, repos::BookRepositoryForDB};
+use backend::handler::{book::create_book_app, memo::create_memo_app};
+use backend::repos::{book::BookRepositoryForDB, memo::MemoRepositoryForDB};
 use backend::AppState;
-use backend::memo::{handler::create_memo_app, repos::MemoRepositoryForDB};
 
 fn create_app(state: Arc<AppState>) -> axum::Router {
 	axum::Router::new()
 		.nest("/book", create_book_app().with_state(state.clone()))
 		.nest("/memo", create_memo_app().with_state(state.clone()))
-		.layer(cors::CorsLayer::new()
-			.allow_origin(cors::AllowOrigin::any())
-			.allow_headers(cors::AllowHeaders::any())
-			.allow_methods(cors::AllowMethods::any())
+		.layer(
+			cors::CorsLayer::new()
+				.allow_origin(cors::AllowOrigin::any())
+				.allow_headers(cors::AllowHeaders::any())
+				.allow_methods(cors::AllowMethods::any()),
 		)
 }
 

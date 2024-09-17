@@ -1,18 +1,30 @@
-use axum::{extract::{Json, Path, State}, http::StatusCode, response::IntoResponse};
+use axum::{
+	extract::{Json, Path, State},
+	http::StatusCode,
+	response::IntoResponse,
+};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
-use crate::book::repos::{BookInfo, BookRepository};
+use crate::handler::memo::{create_memo, find_all_memo};
+use crate::repos::book::{BookInfo, BookRepository};
 use crate::repos::RepositoryError;
-use crate::memo::handler::{find_all_memo, create_memo};
 use crate::AppState;
 
 pub fn create_book_app() -> axum::Router<Arc<AppState>> {
 	axum::Router::new()
 		.route("/", axum::routing::get(find_all_book).post(create_book))
-		.nest("/:isbn_13", axum::Router::new()
-			.nest("/", axum::Router::new().route("/", axum::routing::get(find_book).delete(delete_book)))
-			.nest("/memo", axum::Router::new().route("/", axum::routing::get(find_all_memo).post(create_memo)))
+		.nest(
+			"/:isbn_13",
+			axum::Router::new()
+				.nest(
+					"/",
+					axum::Router::new().route("/", axum::routing::get(find_book).delete(delete_book)),
+				)
+				.nest(
+					"/memo",
+					axum::Router::new().route("/", axum::routing::get(find_all_memo).post(create_memo)),
+				),
 		)
 }
 

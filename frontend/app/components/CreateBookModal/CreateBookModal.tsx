@@ -1,5 +1,5 @@
 import {Modal, Button, Form, Spinner} from "react-bootstrap";
-import {useState, ChangeEventHandler, FormEventHandler} from "react";
+import {useState, ChangeEventHandler} from "react";
 
 interface props {
 	show: boolean,
@@ -39,7 +39,8 @@ export default function CreateBookModal({show, handleClose, createApi, afterCrea
 			setIsLoading(false);
 			if(!res.ok) {
 				if(res.statusText == "Bad Request") alert("登録済みです");
-				if(res.statusText == "Not Found") alert("見つかりません");
+				else if(res.statusText == "Not Found") alert("見つかりません");
+				else alert("err!");
 				return;
 			}
 			afterCreateHandler();
@@ -53,7 +54,7 @@ export default function CreateBookModal({show, handleClose, createApi, afterCrea
 			</Modal.Header>
 
 			<Modal.Body>
-				<Form>
+				<Form onSubmit={onSubmit}>
 					<Form.Group
 						onChange={onChangeIsbn13Form}
 						className="mb-3"

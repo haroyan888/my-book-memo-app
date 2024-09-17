@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::{Acquire, FromRow, PgPool, Postgres, Transaction};
 use std::{borrow::BorrowMut, sync::Arc};
 
-use super::super::repos::RepositoryError;
+use super::RepositoryError;
 
 #[derive(Serialize, Debug, FromRow, PartialEq)]
 pub struct Memo {

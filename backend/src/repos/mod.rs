@@ -1,3 +1,6 @@
+pub mod book;
+pub mod memo;
+
 use axum::http::StatusCode;
 use thiserror::Error;
 
