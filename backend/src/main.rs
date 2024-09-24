@@ -1,15 +1,24 @@
 use sqlx::PgPool;
-use std::sync::Arc;
 use tower_http::cors;
+use tokio::signal;
 
 use backend::handler::{book::create_book_app, memo::create_memo_app};
-use backend::repos::{book::BookRepositoryForDB, memo::MemoRepositoryForDB};
-use backend::AppState;
+use backend::repos::{book::{BookRepositoryForPg, BookRepository}, memo::{MemoRepositoryForPg, MemoRepository}};
 
-fn create_app(state: Arc<AppState>) -> axum::Router {
+fn create_app<BookRepos, MemoRepos>(book_repos: BookRepos, memo_repos: MemoRepos) -> axum::Router
+where
+	BookRepos: BookRepository,
+	MemoRepos: MemoRepository,
+{
 	axum::Router::new()
-		.nest("/book", create_book_app().with_state(state.clone()))
-		.nest("/memo", create_memo_app().with_state(state.clone()))
+		.nest(
+			"/book",
+			create_book_app(&book_repos, &memo_repos)
+		)
+		.nest(
+			"/memo",
+			create_memo_app(&memo_repos)
+		)
 		.layer(
 			cors::CorsLayer::new()
 				.allow_origin(cors::AllowOrigin::any())
@@ -26,18 +35,20 @@ async fn main() {
 	let pool = PgPool::connect(&db_url)
 		.await
 		.expect("failed to create pool");
-	let state = Arc::new(AppState {
-		book_repos: BookRepositoryForDB::new(pool.clone()),
-		memo_repos: MemoRepositoryForDB::new(pool.clone()),
-	});
+	let book_repos = BookRepositoryForPg::new(pool.clone());
+	let memo_repos = MemoRepositoryForPg::new(pool.clone());
 
 	let host = std::env::var("APP_HOST").expect("APP_HOST NOT FOUND");
 	let port = std::env::var("APP_PORT").expect("APP_PORT NOT FOUND");
-	let app = create_app(state);
+	let app = create_app(book_repos, memo_repos);
 	let listener = tokio::net::TcpListener::bind(format!("{}:{}", host, port))
 		.await
 		.expect("failed to listen");
+
 	axum::serve(listener, app)
+		.with_graceful_shutdown(async { signal::ctrl_c().await.unwrap() })
 		.await
 		.expect("failed to serve app");
+
+	println!("exit");
 }

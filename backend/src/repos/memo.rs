@@ -26,13 +26,13 @@ pub trait MemoRepository: Clone + Send + Sync + 'static {
 }
 
 #[derive(Clone)]
-pub struct MemoRepositoryForDB {
+pub struct MemoRepositoryForPg {
 	pool: Arc<PgPool>,
 }
 
-impl MemoRepositoryForDB {
+impl MemoRepositoryForPg {
 	pub fn new(pool: PgPool) -> Self {
-		MemoRepositoryForDB {
+		MemoRepositoryForPg {
 			pool: Arc::new(pool),
 		}
 	}
@@ -47,7 +47,7 @@ impl MemoRepositoryForDB {
 }
 
 #[async_trait]
-impl MemoRepository for MemoRepositoryForDB {
+impl MemoRepository for MemoRepositoryForPg {
 	async fn find(&self, id: &str) -> Result<Memo, RepositoryError> {
 		let mut tx = self.start_transaction().await?;
 		let conn = tx

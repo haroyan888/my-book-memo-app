@@ -1,31 +1,32 @@
 use axum::{
-	extract::{Json, Path, State},
+	extract::{Json, Path, Extension},
 	http::StatusCode,
 	response::IntoResponse,
 };
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 
 use crate::handler::memo::{create_memo, find_all_memo};
 use crate::repos::book::{BookInfo, BookRepository};
 use crate::repos::RepositoryError;
-use crate::AppState;
+use crate::repos::memo::MemoRepository;
 
-pub fn create_book_app() -> axum::Router<Arc<AppState>> {
+pub fn create_book_app<BookRepos: BookRepository, MemoRepos: MemoRepository>(book_repos: &BookRepos, memo_repos: &MemoRepos) -> axum::Router {
 	axum::Router::new()
-		.route("/", axum::routing::get(find_all_book).post(create_book))
+		.route("/", axum::routing::get(find_all_book::<BookRepos>).post(create_book::<BookRepos>))
 		.nest(
 			"/:isbn_13",
 			axum::Router::new()
 				.nest(
 					"/",
-					axum::Router::new().route("/", axum::routing::get(find_book).delete(delete_book)),
+					axum::Router::new().route("/", axum::routing::get(find_book::<BookRepos>).delete(delete_book::<BookRepos>)),
 				)
 				.nest(
 					"/memo",
-					axum::Router::new().route("/", axum::routing::get(find_all_memo).post(create_memo)),
-				),
+					axum::Router::new().route("/", axum::routing::get(find_all_memo::<MemoRepos>).post(create_memo::<MemoRepos>)),
+				)
 		)
+		.layer(Extension(book_repos.clone()))
+		.layer(Extension(memo_repos.clone()))
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -100,11 +101,10 @@ fn handle_repository_error(err: RepositoryError) -> StatusCode {
 }
 
 // 登録済みの本を全て返すハンドラ
-async fn find_all_book(
-	State(state): State<Arc<AppState>>,
+async fn find_all_book<T: BookRepository>(
+	Extension(book_repos): Extension<T>,
 ) -> Result<impl IntoResponse, StatusCode> {
-	let book_info_list = state
-		.book_repos
+	let book_info_list = book_repos
 		.find_all()
 		.await
 		.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
@@ -113,12 +113,11 @@ async fn find_all_book(
 }
 
 // 本を検索するハンドラ
-async fn find_book(
+async fn find_book<T: BookRepository>(
 	Path(isbn_13): Path<String>,
-	State(state): State<Arc<AppState>>,
+	Extension(book_repos): Extension<T>,
 ) -> Result<impl IntoResponse, StatusCode> {
-	let book_info = state
-		.book_repos
+	let book_info = book_repos
 		.find(&isbn_13)
 		.await
 		.map_err(handle_repository_error)?;
@@ -127,11 +126,11 @@ async fn find_book(
 }
 
 // 本を登録するハンドラ
-async fn create_book(
-	State(state): State<Arc<AppState>>,
+async fn create_book<T: BookRepository>(
+	Extension(book_repos): Extension<T>,
 	Json(payload): Json<CreateBook>,
 ) -> Result<impl IntoResponse, StatusCode> {
-	if state.book_repos.find(&payload.isbn_13).await.is_ok() {
+	if book_repos.find(&payload.isbn_13).await.is_ok() {
 		return Err(StatusCode::BAD_REQUEST);
 	}
 	const URL: &str = "https://www.googleapis.com/books/v1/volumes?q=isbn:";
@@ -157,8 +156,7 @@ async fn create_book(
 		return Err(StatusCode::NOT_FOUND);
 	}
 
-	let book_info = state
-		.book_repos
+	let book_info = book_repos
 		.create(books)
 		.await
 		.map_err(handle_repository_error)?;
@@ -167,12 +165,11 @@ async fn create_book(
 }
 
 // 本を削除するハンドラ
-async fn delete_book(
+async fn delete_book<T: BookRepository>(
 	Path(isbn_13): Path<String>,
-	State(state): State<Arc<AppState>>,
+	Extension(book_repos): Extension<T>,
 ) -> Result<impl IntoResponse, StatusCode> {
-	state
-		.book_repos
+	book_repos
 		.delete(&isbn_13)
 		.await
 		.map_err(handle_repository_error)?;

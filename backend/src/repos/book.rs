@@ -24,13 +24,13 @@ pub trait BookRepository: Clone + Send + Sync + 'static {
 }
 
 #[derive(Clone)]
-pub struct BookRepositoryForDB {
+pub struct BookRepositoryForPg {
 	pool: Arc<PgPool>,
 }
 
-impl BookRepositoryForDB {
+impl BookRepositoryForPg {
 	pub fn new(pool: PgPool) -> Self {
-		BookRepositoryForDB {
+		BookRepositoryForPg {
 			pool: Arc::new(pool),
 		}
 	}
@@ -45,7 +45,7 @@ impl BookRepositoryForDB {
 }
 
 #[async_trait]
-impl BookRepository for BookRepositoryForDB {
+impl BookRepository for BookRepositoryForPg {
 	async fn find(&self, isbn_13: &str) -> Result<BookInfo, RepositoryError> {
 		let mut tx = self.start_transaction().await?;
 		let conn = tx

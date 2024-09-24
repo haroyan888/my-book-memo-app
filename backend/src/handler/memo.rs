@@ -1,25 +1,26 @@
 use axum::{
-	extract::{Json, Path, State},
+	extract::{Json, Path, Extension},
 	http::StatusCode,
 	response::IntoResponse,
 };
-use std::sync::Arc;
 
 use crate::repos::handle_repository_error;
 use crate::repos::memo::{CreateMemo, MemoRepository};
-use crate::AppState;
 
-pub fn create_memo_app() -> axum::Router<Arc<AppState>> {
-	axum::Router::new().route("/:id", axum::routing::get(find_memo).delete(delete_memo))
+pub fn create_memo_app<MemoRepos: MemoRepository>(memo_repos: &MemoRepos) -> axum::Router {
+	axum::Router::new().route(
+		"/:id",
+		axum::routing::get(find_memo::<MemoRepos>).delete(delete_memo::<MemoRepos>)
+	)
+		.layer(Extension(memo_repos.clone()))
 }
 
 // 登録済みのメモを全て返すハンドラ
-pub async fn find_all_memo(
+pub async fn find_all_memo<T: MemoRepository>(
 	Path(isbn_13): Path<String>,
-	State(state): State<Arc<AppState>>,
+	Extension(memo_repos): Extension<T>,
 ) -> Result<impl IntoResponse, StatusCode> {
-	let memo_list = state
-		.memo_repos
+	let memo_list = memo_repos
 		.find_all(&isbn_13)
 		.await
 		.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
@@ -28,12 +29,11 @@ pub async fn find_all_memo(
 }
 
 // メモを検索するハンドラ
-async fn find_memo(
+async fn find_memo<T: MemoRepository>(
 	Path(id): Path<String>,
-	State(state): State<Arc<AppState>>,
+	Extension(memo_repos): Extension<T>,
 ) -> Result<impl IntoResponse, StatusCode> {
-	let memo = state
-		.memo_repos
+	let memo = memo_repos
 		.find(&id)
 		.await
 		.map_err(handle_repository_error)?;
@@ -42,13 +42,12 @@ async fn find_memo(
 }
 
 // メモを登録するハンドラ
-pub async fn create_memo(
+pub async fn create_memo<T: MemoRepository>(
 	Path(isbn_13): Path<String>,
-	State(state): State<Arc<AppState>>,
+	Extension(memo_repos): Extension<T>,
 	Json(payload): Json<CreateMemo>,
 ) -> Result<impl IntoResponse, StatusCode> {
-	let memo = state
-		.memo_repos
+	let memo = memo_repos
 		.create(payload, &isbn_13)
 		.await
 		.map_err(handle_repository_error)?;
@@ -57,12 +56,11 @@ pub async fn create_memo(
 }
 
 // メモを削除するハンドラ
-async fn delete_memo(
+async fn delete_memo<T: MemoRepository>(
 	Path(id): Path<String>,
-	State(state): State<Arc<AppState>>,
+	Extension(memo_repos): Extension<T>,
 ) -> Result<impl IntoResponse, StatusCode> {
-	state
-		.memo_repos
+	memo_repos
 		.delete(&id)
 		.await
 		.map_err(handle_repository_error)?;
