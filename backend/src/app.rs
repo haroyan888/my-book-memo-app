@@ -75,7 +75,7 @@ impl App {
 			.with_graceful_shutdown(shutdown_signal(deletion_task.abort_handle()))
 			.await?;
 
-		deletion_task.await??;
+		deletion_task.await.ok();
 
 		Ok(())
 	}
