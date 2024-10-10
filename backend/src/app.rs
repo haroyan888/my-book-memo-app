@@ -18,7 +18,7 @@ use crate::handler::{
 use crate::repos::{
 	book::{BookRepositoryForPg, BookRepository},
 	memo::{MemoRepositoryForPg, MemoRepository},
-	auth::AuthRepository,
+	auth::AuthRepositoryForPg,
 };
 
 pub struct App {
@@ -53,7 +53,7 @@ impl App {
 			.with_expiry(Expiry::OnInactivity(Duration::days(1)))
 			.with_signed(key);
 
-		let backend = AuthRepository::new(self.db.clone());
+		let backend = AuthRepositoryForPg::new(self.db.clone());
 		let auth_layer = AuthManagerLayerBuilder::new(backend, session_layer).build();
 
 		let book_repos = BookRepositoryForPg::new(self.db.clone());
@@ -63,8 +63,8 @@ impl App {
 		let port = std::env::var("APP_PORT").expect("APP_PORT is not defined");
 
 		let app = create_app(book_repos, memo_repos)
-			.route_layer(login_required!(AuthRepository, login_url = "/auth/login"))
-			.nest("/auth", create_auth_app())
+			.route_layer(login_required!(AuthRepositoryForPg, login_url = "/login"))
+			.merge(create_auth_app())
 			.layer(auth_layer);
 
 		let listener = tokio::net::TcpListener::bind(format!("{}:{}", host, port))

@@ -14,11 +14,11 @@ pub struct Credentials {
 }
 
 #[derive(Debug, Clone)]
-pub struct AuthRepository {
+pub struct AuthRepositoryForPg {
 	db: PgPool,
 }
 
-impl AuthRepository {
+impl AuthRepositoryForPg {
 	pub fn new(db: PgPool) -> Self {
 		Self { db }
 	}
@@ -34,7 +34,7 @@ pub enum Error {
 }
 
 #[async_trait]
-impl AuthnBackend for AuthRepository {
+impl AuthnBackend for AuthRepositoryForPg {
 	type User = User;
 	type Credentials = Credentials;
 	type Error = Error;
@@ -64,4 +64,31 @@ impl AuthnBackend for AuthRepository {
 	}
 }
 
-pub type AuthSession = axum_login::AuthSession<AuthRepository>;
+impl AuthRepositoryForPg {
+	pub async fn find_account(&self, username: &str) -> Result<Option<User>, Error> {
+		let user: Option<User> = sqlx::query_as("select * from users where username = $1")
+			.bind(username)
+			.fetch_optional(&self.db)
+			.await?;
+
+		Ok(user)
+	}
+	pub async fn create_account(
+		&self,
+		credentials: Credentials
+	) -> Result<User, Error> {
+		let id = uuid::Uuid::new_v4().to_string();
+		let hashed_password = password_auth::generate_hash(&credentials.password);
+		// ユーザを作成
+		let user: User = sqlx::query_as("insert into users(id, username, password) values ($1, $2, $3) returning *;")
+			.bind(id)
+			.bind(&credentials.username)
+			.bind(hashed_password)
+			.fetch_one(&self.db)
+			.await?;
+
+		Ok(user)
+	}
+}
+
+pub type AuthSession = axum_login::AuthSession<AuthRepositoryForPg>;
