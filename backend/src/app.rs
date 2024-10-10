@@ -9,6 +9,7 @@ use tokio::{signal, task::AbortHandle};
 use tower_sessions::cookie::Key;
 use tower_sessions_sqlx_store::PostgresStore;
 use time::Duration;
+
 use crate::handler::{
 	book::create_book_app,
 	memo::create_memo_app,
@@ -17,7 +18,7 @@ use crate::handler::{
 use crate::repos::{
 	book::{BookRepositoryForPg, BookRepository},
 	memo::{MemoRepositoryForPg, MemoRepository},
-	auth::Backend,
+	auth::AuthRepository,
 };
 
 pub struct App {
@@ -52,7 +53,7 @@ impl App {
 			.with_expiry(Expiry::OnInactivity(Duration::days(1)))
 			.with_signed(key);
 
-		let backend = Backend::new(self.db.clone());
+		let backend = AuthRepository::new(self.db.clone());
 		let auth_layer = AuthManagerLayerBuilder::new(backend, session_layer).build();
 
 		let book_repos = BookRepositoryForPg::new(self.db.clone());
@@ -62,7 +63,7 @@ impl App {
 		let port = std::env::var("APP_PORT").expect("APP_PORT is not defined");
 
 		let app = create_app(book_repos, memo_repos)
-			.route_layer(login_required!(Backend, login_url = "/auth/login"))
+			.route_layer(login_required!(AuthRepository, login_url = "/auth/login"))
 			.nest("/auth", create_auth_app())
 			.layer(auth_layer);
 
