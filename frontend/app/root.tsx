@@ -5,8 +5,20 @@ import {
   Scripts,
   ScrollRestoration,
 } from "@remix-run/react";
+import type { MetaFunction } from "@remix-run/node";
 import "./tailwind.css";
 import 'bootstrap/dist/css/bootstrap.min.css';
+import {useEffect} from "react";
+
+import {ORIGIN} from "~/consts";
+import checkLoginStatus from "~/utility/login/check-login";
+
+export const meta: MetaFunction = () => {
+    return [
+        { title: "読書メモアプリ" },
+        { name: "description", content: "Welcome to Remix!" },
+    ];
+};
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -27,5 +39,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+    useEffect(() => {
+        const authURLList = [
+            ORIGIN + "/login",
+            ORIGIN + "/create-account"
+        ];
+        const URL = document.URL;
+        if(!authURLList.includes(URL)) (async () => {
+            if (!await checkLoginStatus()) document.location.href = "/login";
+        })();
+    }, []);
+    return <Outlet />;
 }

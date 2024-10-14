@@ -1,5 +1,6 @@
 import {Form} from "react-bootstrap";
 import { TiDelete } from "react-icons/ti";
+import myFetch from "~/utility/fetch/my-fetch";
 
 interface props {
 	text: string,
@@ -10,7 +11,7 @@ interface props {
 export default function MemoList({text, deleteApi, handleAfterDelete}: props) {
 	const handleClick = () => {
 		(async () => {
-			const res = await fetch(deleteApi, {method: "DELETE"});
+			const res = await myFetch(deleteApi, {method: "DELETE"});
 			if (!res.ok) {
 				alert("削除に失敗しました");
 				return;

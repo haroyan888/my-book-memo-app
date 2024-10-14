@@ -6,6 +6,7 @@ import {useEffect, useState, FormEventHandler} from "react";
 import Memo from "~/types/memo";
 import MemoList from "~/components/MemoList/MemoList";
 import ConfirmDialog from "~/components/ConfirmDialog/ConfirmDialog";
+import myFetch from "~/utility/fetch/my-fetch";
 
 interface props {
 	book: Book,
@@ -25,7 +26,7 @@ export default function BookDetailModal({...props}: props) {
 	const handleConfirmDialogClose = () => setShowConfirmDialog(false);
 
 	const getMemoList = async () => {
-		const res = await fetch(memoUrl);
+		const res = await myFetch(memoUrl);
 		if (!res.ok) {
 			return;
 		}
@@ -34,7 +35,7 @@ export default function BookDetailModal({...props}: props) {
 	};
 
 	const deleteBook = async () => {
-		const res = await fetch(deleteBookUrl, { method: "DELETE" });
+		const res = await myFetch(deleteBookUrl, { method: "DELETE" });
 		if (!res.ok) {
 			return;
 		}
@@ -48,7 +49,7 @@ export default function BookDetailModal({...props}: props) {
 		const form = new FormData(event.currentTarget);
 		const memo = form.get("memo-input-form")?.toString();
 		(async () => {
-			const res = await fetch("http://localhost:8000/book/" + props.book.isbn_13 + "/memo", {
+			const res = await myFetch("http://localhost:8000/book/" + props.book.isbn_13 + "/memo", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
