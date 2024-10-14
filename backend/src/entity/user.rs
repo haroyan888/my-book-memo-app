@@ -5,7 +5,7 @@ use axum_login::AuthUser;
 #[derive(Clone, Serialize, Deserialize, FromRow)]
 pub struct User {
 	pub id: String,
-	pub username: String,
+	pub email: String,
 	pub password: String,
 }
 
@@ -13,7 +13,7 @@ impl std::fmt::Debug for User {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		f.debug_struct("User")
 			.field("id", &self.id)
-			.field("username", &self.username)
+			.field("email", &self.email)
 			.field("password", &"[redacted]")
 			.finish()
 	}

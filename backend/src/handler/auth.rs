@@ -2,6 +2,7 @@ use axum::{http::StatusCode, response::IntoResponse, routing::{get, post}, Json,
 use serde_json::json;
 
 use crate::repos::auth::{AuthSession, Credentials};
+use crate::modules::validate_json::ValidatedJson;
 
 pub fn create_auth_app() -> Router<()> {
 	Router::new()
@@ -12,11 +13,11 @@ pub fn create_auth_app() -> Router<()> {
 
 async fn create_account(
 	mut auth_session: AuthSession,
-	Json(creds): Json<Credentials>,
+	ValidatedJson(creds): ValidatedJson<Credentials>,
 ) -> Result<impl IntoResponse, impl IntoResponse> {
 	let find_account_res = auth_session
 		.backend
-		.find_account(&creds.username)
+		.find_account(&creds.email)
 		.await
 		.map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"message": "サーバーエラー"}))))?;
 
@@ -49,11 +50,11 @@ async fn create_account(
 
 async fn login(
 	mut auth_session: AuthSession,
-	Json(creds): Json<Credentials>,
+	ValidatedJson(creds): ValidatedJson<Credentials>,
 ) -> Result<impl IntoResponse, impl IntoResponse> {
 	let find_account_res = auth_session
 		.backend
-		.find_account(&creds.username)
+		.find_account(&creds.email)
 		.await
 		.map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"message": "サーバーエラー"}))))?;
 

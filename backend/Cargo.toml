@@ -22,4 +22,5 @@ tower-sessions = { version = "0.13.0", default-features = false, features = [
 ] }
 tower-sessions-sqlx-store = { version = "0.14.1", features = ["postgres"] }
 time = "0.3.36"
+validator = { version = "0.18.1", features = ["derive"] }
 
