@@ -5,12 +5,12 @@ import {FormEvent} from "react";
 import {ORIGIN} from "~/consts";
 import {Link} from "@remix-run/react";
 
-function Login() {
+function CreateAccount() {
     const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const accountInfo = new FormData(event.currentTarget);
         const res = await fetch(
-            "http://localhost:8000/login",
+            "http://localhost:8000/create-account",
             {
                 method: "POST",
                 headers: {
@@ -59,4 +59,4 @@ function Login() {
     );
 }
 
-export default Login;
+export default CreateAccount;
