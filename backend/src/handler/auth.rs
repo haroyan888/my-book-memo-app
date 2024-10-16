@@ -1,4 +1,11 @@
-use axum::{http::StatusCode, response::IntoResponse, routing::{get, post}, Json, Router};
+use axum::{
+	http::StatusCode,
+	response::{IntoResponse, Redirect},
+	routing::{get, post},
+	Json,
+	Form,
+	Router
+};
 use serde_json::json;
 
 use crate::repos::auth::{AuthSession, Credentials};
@@ -8,6 +15,7 @@ pub fn create_auth_app() -> Router<()> {
 	Router::new()
 		.route("/create-account", post(create_account))
 		.route("/login", post(login))
+		.route("/check-login-status", get(check_login_status))
 		.route("/logout", get(logout))
 }
 
@@ -29,7 +37,7 @@ async fn create_account(
 		return Err((StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"message": "サーバーエラー"}))));
 	}
 
-	let user = match auth_session.authenticate(creds).await {
+	let user = match auth_session.authenticate(creds.clone()).await {
 		// 成功
 		Ok(Some(user)) => user,
 		// 認証に失敗した場合
@@ -45,12 +53,13 @@ async fn create_account(
 		return Err((StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"message": "サーバーエラー"}))));
 	}
 
-	Ok((StatusCode::OK, Json(json!({"message": "成功"}))))
+	// Ok((StatusCode::OK, Json(json!({"message": "成功"}))))
+	Ok(Redirect::to(&creds.next))
 }
 
 async fn login(
 	mut auth_session: AuthSession,
-	ValidatedJson(creds): ValidatedJson<Credentials>,
+	Form(creds): Form<Credentials>,
 ) -> Result<impl IntoResponse, impl IntoResponse> {
 	let find_account_res = auth_session
 		.backend
@@ -81,7 +90,17 @@ async fn login(
 		return Err((StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"message": "サーバーエラー"}))));
 	}
 
-	Ok((StatusCode::OK, Json(json!({"message": "成功"}))))
+	// Ok((StatusCode::OK, Json(json!({"message": "成功"}))))
+	Ok(Redirect::to(&creds.next))
+}
+
+async fn check_login_status(
+	auth_session: AuthSession
+) -> impl IntoResponse {
+	(
+		StatusCode::OK,
+		Json(json!({"is_login": auth_session.user.is_some()}))
+	).into_response()
 }
 
 async fn logout(mut auth_session: AuthSession) -> impl IntoResponse {

@@ -1,3 +1,4 @@
+use axum::http;
 use axum_login::{
 	login_required,
 	tower_sessions::{ExpiredDeletion, Expiry, SessionManagerLayer},
@@ -63,9 +64,24 @@ impl App {
 		let port = std::env::var("APP_PORT").expect("APP_PORT is not defined");
 
 		let app = create_app(book_repos, memo_repos)
-			.route_layer(login_required!(AuthRepositoryForPg, login_url = "/login"))
+			.route_layer(login_required!(AuthRepositoryForPg))
 			.merge(create_auth_app())
-			.layer(auth_layer);
+			.layer(auth_layer)
+			.layer(
+				cors::CorsLayer::new()
+					.allow_origin("http://localhost:5173".parse::<http::HeaderValue>().unwrap())
+					.allow_headers([
+						http::header::AUTHORIZATION,
+						http::header::ACCEPT,
+						http::header::CONTENT_TYPE
+					])
+					.allow_methods([
+						http::method::Method::GET,
+						http::method::Method::POST,
+						http::method::Method::DELETE,
+					])
+					.allow_credentials(true),
+			);
 
 		let listener = tokio::net::TcpListener::bind(format!("{}:{}", host, port))
 			.await
@@ -95,12 +111,6 @@ where
 		.nest(
 			"/memo",
 			create_memo_app(&memo_repos)
-		)
-		.layer(
-			cors::CorsLayer::new()
-				.allow_origin(cors::AllowOrigin::any())
-				.allow_headers(cors::AllowHeaders::any())
-				.allow_methods(cors::AllowMethods::any()),
 		)
 }
 

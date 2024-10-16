@@ -1,5 +1,6 @@
 import {Modal, Button, Form, Spinner} from "react-bootstrap";
 import {useState, ChangeEventHandler} from "react";
+import myFetch from "~/utility/fetch/my-fetch";
 
 interface props {
 	show: boolean,
@@ -23,7 +24,7 @@ export default function CreateBookModal({show, handleClose, createApi, afterCrea
 		setEnableSubmit(false);
 		setIsLoading(true);
 		(async () => {
-			const res = await fetch(
+			const res = await myFetch(
 				createApi,
 				{
 					method: "POST",
