@@ -15,7 +15,6 @@ pub struct Credentials {
 	pub email: String,
 	#[validate(length(min = 1, max = 255), custom(function="validate_password"))]
 	pub password: String,
-	pub next: String,
 }
 
 #[derive(Debug, Clone)]

@@ -1,6 +1,6 @@
 use axum::{
 	http::StatusCode,
-	response::{IntoResponse, Redirect},
+	response::IntoResponse,
 	routing::{get, post},
 	Json,
 	Form,
@@ -53,7 +53,8 @@ async fn create_account(
 		return Err((StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"message": "サーバーエラー"}))));
 	}
 
-	Ok(Redirect::to(&creds.next))
+	// Ok(Redirect::to(&creds.next))
+	Ok(StatusCode::OK)
 }
 
 async fn login(
@@ -89,7 +90,8 @@ async fn login(
 		return Err((StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"message": "サーバーエラー"}))));
 	}
 
-	Ok(Redirect::to(&creds.next))
+	// Ok(Redirect::to(&creds.next))
+	Ok(StatusCode::OK)
 }
 
 async fn get_account(

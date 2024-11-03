@@ -19,8 +19,8 @@ export default function ConfirmDialog({...props}: props) {
 				<p>{props.message}</p>
 			</Modal.Body>
 			<Modal.Footer>
-				<Button variant="secondary" onClick={props.handleClose}>キャンセル</Button>
-				<Button variant={props.variant} onClick={props.handleConfirm}>決定</Button>
+				<Button variant="secondary" onClick={props.handleClose}>いいえ</Button>
+				<Button variant={props.variant} onClick={props.handleConfirm}>はい</Button>
 			</Modal.Footer>
 		</Modal>
 	)

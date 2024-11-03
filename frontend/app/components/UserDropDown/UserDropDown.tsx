@@ -67,7 +67,7 @@ function UserDropDown({baseURL}: props) {
                 </Dropdown>
                 : undefined}
             <ConfirmDialog
-                message="ログアウト"
+                message="本当にログアウトしますか"
                 variant="danger"
                 show={showLogoutConfirmDialog}
                 handleClose={closeLogoutConfirmDialog}
