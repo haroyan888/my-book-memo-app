@@ -4,24 +4,24 @@ use axum::{
 	routing::{get, post},
 	Json,
 	Form,
+	body::Body,
 	Router
 };
 use serde_json::json;
 
 use crate::repos::auth::{AuthSession, Credentials};
-use crate::modules::validate_json::ValidatedJson;
 
 pub fn create_auth_app() -> Router<()> {
 	Router::new()
 		.route("/create-account", post(create_account))
 		.route("/login", post(login))
-		.route("/check-login-status", get(check_login_status))
+		.route("/account", get(get_account).post(create_account).delete(delete_account))
 		.route("/logout", get(logout))
 }
 
 async fn create_account(
 	mut auth_session: AuthSession,
-	ValidatedJson(creds): ValidatedJson<Credentials>,
+	Form(creds): Form<Credentials>,
 ) -> Result<impl IntoResponse, impl IntoResponse> {
 	let find_account_res = auth_session
 		.backend
@@ -53,7 +53,6 @@ async fn create_account(
 		return Err((StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"message": "サーバーエラー"}))));
 	}
 
-	// Ok((StatusCode::OK, Json(json!({"message": "成功"}))))
 	Ok(Redirect::to(&creds.next))
 }
 
@@ -90,17 +89,40 @@ async fn login(
 		return Err((StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"message": "サーバーエラー"}))));
 	}
 
-	// Ok((StatusCode::OK, Json(json!({"message": "成功"}))))
 	Ok(Redirect::to(&creds.next))
 }
 
-async fn check_login_status(
+async fn get_account(
 	auth_session: AuthSession
 ) -> impl IntoResponse {
-	(
-		StatusCode::OK,
-		Json(json!({"is_login": auth_session.user.is_some()}))
-	).into_response()
+	let user = auth_session.user.clone();
+	if user.is_none() {
+		return (StatusCode::UNAUTHORIZED, Body::empty()).into_response();
+	}
+
+	(StatusCode::OK, Json(json!({"email": user.unwrap().email})),).into_response()
+}
+
+async fn delete_account(
+	mut auth_session: AuthSession
+) -> impl IntoResponse {
+	if auth_session.user.is_none() {
+		return StatusCode::UNAUTHORIZED
+	}
+
+	let user_id = auth_session.user.clone().unwrap().id;
+
+	if let Err(e) = auth_session.logout().await {
+		println!("{}", e);
+		return StatusCode::INTERNAL_SERVER_ERROR;
+	}
+
+	if let Err(e) = auth_session.backend.delete_account(&user_id).await {
+		println!("{}", e);
+		return StatusCode::INTERNAL_SERVER_ERROR;
+	}
+
+	StatusCode::NO_CONTENT
 }
 
 async fn logout(mut auth_session: AuthSession) -> impl IntoResponse {

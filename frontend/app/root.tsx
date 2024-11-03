@@ -11,7 +11,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import {useEffect} from "react";
 
 import {ORIGIN} from "~/consts";
-import checkLoginStatus from "~/utility/login/check-login";
+import isLoggedIn from "~/utility/login/check-login";
 
 export const meta: MetaFunction = () => {
     return [
@@ -41,12 +41,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
     useEffect(() => {
         const authURLList = [
+            ORIGIN + '/',
             ORIGIN + "/login",
             ORIGIN + "/create-account"
         ];
         const URL = document.URL;
         if(!authURLList.includes(URL)) (async () => {
-            if (!await checkLoginStatus()) document.location.href = "/login";
+            if (!await isLoggedIn()) document.location.href = "/login";
         })();
     }, []);
     return <Outlet />;

@@ -6,6 +6,7 @@ import {useState} from "react";
 
 interface props {
 	book: Book,
+	baseUrl: string,
 	handleAfterDelete: () => void,
 }
 
@@ -42,7 +43,7 @@ export default function BookCard({...props}: props) {
 					</Card.Body>
 				</Card>
 			</button>
-			<BookDetailModal book={props.book} show={show} handleClose={handleClose} handleAfterDelete={props.handleAfterDelete}/>
+			<BookDetailModal book={props.book} baseUrl={props.baseUrl} show={show} handleClose={handleClose} handleAfterDelete={props.handleAfterDelete}/>
 		</>
 	)
 }

@@ -94,6 +94,18 @@ impl AuthRepositoryForPg {
 
 		Ok(user)
 	}
+
+	pub async fn delete_account(
+		&self,
+		id: &str
+	) -> Result<(), Error> {
+		sqlx::query("delete from users where id = $1;")
+			.bind(id)
+			.execute(&self.db)
+			.await?;
+
+		Ok(())
+	}
 }
 
 pub type AuthSession = axum_login::AuthSession<AuthRepositoryForPg>;

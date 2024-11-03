@@ -6,6 +6,7 @@ import Book from "~/types/book";
 import BookCard from "~/components/BookCard/BookCard";
 import CreateBookModal from "~/components/CreateBookModal/CreateBookModal";
 import myFetch from "~/utility/fetch/my-fetch";
+import UserDropDown from "~/components/UserDropDown/UserDropDown";
 
 export const meta: MetaFunction = () => {
     return [
@@ -16,9 +17,10 @@ export const meta: MetaFunction = () => {
 
 export default function Index() {
 
-    const bookUrl = 'http://localhost:8000/book';
+    const baseURL = "http://localhost:8000"
+    const bookUrl = baseURL + '/book';
 
-    const [books, setBooks] = useState<Book[] | undefined>(undefined);
+    const [books, setBooks] = useState<Book[]>([]);
     const [show, setShow] = useState(false);
     const handleClose = () => setShow(false);
     const handleShow = () => setShow(true);
@@ -26,31 +28,31 @@ export default function Index() {
     const getBooksInfo = async () => {
         let res = await myFetch(bookUrl);
         if (!res.ok) {
-            setBooks(undefined);
+            setBooks([]);
             return;
         }
 
         let books: Book[] = await res.json();
-        console.log(books);
         setBooks(books);
     };
+
     const afterCreateHandler = () => {
         handleClose();
-        getBooksInfo();
+        void getBooksInfo();
     };
 
     useEffect(() => {
-        getBooksInfo();
+        void getBooksInfo();
     }, []);
 
     return (
         <>
+            <header className="w-full p-3 flex justify-end bg-blue-500">
+                <UserDropDown baseURL={baseURL} />
+            </header>
             <div className="font-sans p-4 flex flex-wrap justify-content-center">
-                {books
-                    ? books.map((book) =>
-                        <BookCard book={book} key={book.isbn_13} handleAfterDelete={getBooksInfo}/>)
-                    : undefined
-                }
+                {books.map((book) =>
+                        <BookCard book={book} baseUrl={baseURL} key={book.isbn_13} handleAfterDelete={getBooksInfo}/>)}
             </div>
             <Button className="fixed bottom-[12px] right-[12px]" variant="primary" onClick={handleShow}>本を追加</Button>
             <CreateBookModal

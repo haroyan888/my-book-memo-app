@@ -10,14 +10,15 @@ import myFetch from "~/utility/fetch/my-fetch";
 
 interface props {
 	book: Book,
+	baseUrl: string,
 	show: boolean,
 	handleClose: () => void,
 	handleAfterDelete: () => void,
 }
 
 export default function BookDetailModal({...props}: props) {
-	const memoUrl = "http://localhost:8000/book/" + props.book.isbn_13 + "/memo";
-	const deleteBookUrl = "http://localhost:8000/book/" + props.book.isbn_13;
+	const memoUrl = props.baseUrl + "/book/" + props.book.isbn_13 + "/memo";
+	const deleteBookUrl = props.baseUrl + "/book/" + props.book.isbn_13;
 
 	const [memoList, setMemoList] = useState<Memo[] | undefined>(undefined);
 	const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
