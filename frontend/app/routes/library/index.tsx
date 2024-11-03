@@ -8,13 +8,6 @@ import CreateBookModal from "~/components/CreateBookModal/CreateBookModal";
 import myFetch from "~/utility/fetch/my-fetch";
 import UserDropDown from "~/components/UserDropDown/UserDropDown";
 
-export const meta: MetaFunction = () => {
-    return [
-        { title: "New Remix App" },
-        { name: "description", content: "Welcome to Remix!" },
-    ];
-};
-
 export default function Index() {
 
     const baseURL = "http://localhost:8000"
