@@ -1,6 +1,12 @@
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
+<<<<<<< Updated upstream
 import {ChangeEvent, FormEvent, useState} from "react";
+=======
+import { Toast } from 'react-bootstrap';
+import {ChangeEvent, useState} from "react";
+import { useSearchParams, Link } from '@remix-run/react';
+>>>>>>> Stashed changes
 
 import {ORIGIN} from "~/consts";
 import {useNavigate} from "@remix-run/react";
@@ -17,6 +23,12 @@ function CreateAccount() {
         if (password === retypePassword) setCanCreateAccount(true);
         else setCanCreateAccount(false);
     }
+    
+    const [showWarnToast, setShowWarnToast] = useState(true);
+    const closeWarnToast = () => setShowWarnToast(false);
+
+    const [searchPrams] = useSearchParams();
+    const failedMessage = searchPrams.get("failed");
 
     const navigate = useNavigate();
     const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -45,6 +57,7 @@ function CreateAccount() {
     }
 
     return (
+<<<<<<< Updated upstream
         <div className={"flex h-[100vh] items-center justify-center"}>
             <Form className={"border-solid border-4 rounded-2xl p-5 w-[80%]"} onSubmit={onSubmit}>
                 <Form.Group className="mb-3" controlId="formEmail">
@@ -66,6 +79,51 @@ function CreateAccount() {
                 </div>
             </Form>
         </div>
+=======
+        <>
+            <div className={"flex h-[100vh] items-center justify-center"}>
+                <Form className={"border-solid border-4 rounded-2xl p-5 w-[80%]"} action="http://localhost:8000/account" method="POST">
+                    <Form.Group className="mb-3" controlId="formEmail">
+                        <Form.Label>メールアドレス</Form.Label>
+                        <Form.Control type="email" name="email" placeholder="メールアドレスを入れてください" required />
+                    </Form.Group>
+                    <Form.Group className="mb-3" controlId="formPassword" onChange={onChangePasswordForm}>
+                        <Form.Label>パスワード</Form.Label>
+                        <Form.Control type="password" name="password" placeholder="パスワードを入れてください" required />
+                    </Form.Group>
+                    <Form.Group className="mb-3" controlId="formReTypingPassword" onChange={onChangeReTypePassword}>
+                        <Form.Label>パスワード（再入力）</Form.Label>
+                        <Form.Control type="password" name="re-typing-password" placeholder="パスワードを再入力してください" required />
+                    </Form.Group>
+                    <Form.Group className="mb-3" controlId="formNext">
+                        <Form.Control type="hidden" name="next" value={ORIGIN + "/library"}/>
+                    </Form.Group>
+                    <Form.Group className="mb-3" controlId="formFailed">
+                        <Form.Control type="hidden" name="failed" value={ORIGIN + "/create-account"}/>
+                    </Form.Group>
+                    <div className="flex flex-row justify-between">
+                        <Link to={"/login"}>ログインはこちら</Link>
+                        <Button variant="primary" type="submit" className={"inline"} disabled={!canCreateAccount}>
+                            アカウント作成
+                        </Button>
+                    </div>
+                </Form>
+            </div>
+            {failedMessage
+                ?<Toast
+                    className="absolute left-2 bottom-2"
+                    bg="danger"
+                    onClose={closeWarnToast}
+                    show={showWarnToast}
+                    delay={3000}
+                    autohide
+                >
+                    <Toast.Body>{failedMessage}</Toast.Body>
+                </Toast>
+                : undefined
+            }
+        </>
+>>>>>>> Stashed changes
     );
 }
 

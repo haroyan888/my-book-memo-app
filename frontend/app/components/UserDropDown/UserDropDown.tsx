@@ -16,6 +16,7 @@ function UserDropDown({baseURL}: props) {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(false);
     const [showLogoutConfirmDialog, setShowLogoutConfirmDialog] = useState(false);
+    const [showDeleteAccountConfirmDialog, setShowDeleteAccountConfirmDialog] = useState(false);
     const navigate = useNavigate();
 
     const getUserInfo = async () => {
@@ -47,6 +48,19 @@ function UserDropDown({baseURL}: props) {
         navigate("/");
     };
 
+    const onClickDeleteAccountButton = () => setShowDeleteAccountConfirmDialog(true);
+    const closeDeleteAccountConfirmDialog = () => setShowDeleteAccountConfirmDialog(false);
+    const confirmDeleteAccountHandler = async () => {
+        const res = await myFetch(baseURL + "/account", {method: "DELETE"});
+        if (!res.ok) {
+            alert("ログアウトに失敗しました");
+            closeDeleteAccountConfirmDialog();
+            return;
+        }
+        closeDeleteAccountConfirmDialog();
+        navigate("/");
+    };
+
     return (
         <>
             {!loading
@@ -58,7 +72,7 @@ function UserDropDown({baseURL}: props) {
                     {user
                         ? <Dropdown.Menu>
                             <Dropdown.Item onClick={onClickLogoutButton}>ログアウト</Dropdown.Item>
-                            <Dropdown.Item>アカウントの削除</Dropdown.Item>
+                            <Dropdown.Item onClick={onClickDeleteAccountButton}>アカウントの削除</Dropdown.Item>
                         </Dropdown.Menu>
                         : <Dropdown.Menu>
                             <Dropdown.Item href={"/login"}>ログイン</Dropdown.Item>
@@ -72,6 +86,13 @@ function UserDropDown({baseURL}: props) {
                 show={showLogoutConfirmDialog}
                 handleClose={closeLogoutConfirmDialog}
                 handleConfirm={confirmLogoutHandler}
+            />
+            <ConfirmDialog
+                message="アカウント削除"
+                variant="danger"
+                show={showDeleteAccountConfirmDialog}
+                handleClose={closeDeleteAccountConfirmDialog}
+                handleConfirm={confirmDeleteAccountHandler}
             />
         </>
     )

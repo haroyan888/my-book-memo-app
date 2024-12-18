@@ -15,6 +15,7 @@ import isLoggedIn from "~/utility/login/check-login";
 
 export const meta: MetaFunction = () => {
     return [
+        { lang: "ja" },
         { title: "読書メモアプリ" },
         { name: "description", content: "Welcome to Remix!" },
     ];
@@ -22,7 +23,7 @@ export const meta: MetaFunction = () => {
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="ja">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -45,7 +46,7 @@ export default function App() {
             ORIGIN + "/login",
             ORIGIN + "/create-account"
         ];
-        const URL = document.URL;
+        const URL = document.URL.split("?")[0];
         if(!authURLList.includes(URL)) (async () => {
             if (!await isLoggedIn()) document.location.href = "/login";
         })();

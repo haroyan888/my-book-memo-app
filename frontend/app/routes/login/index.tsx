@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import { Form, Button, Col, Row } from 'react-bootstrap';
 import {FormEvent} from "react";
 import {Link, useNavigate} from "@remix-run/react";
@@ -31,8 +32,24 @@ function Login() {
 
         navigate("/library");
     }
+=======
+import Button from 'react-bootstrap/Button';
+import Form from 'react-bootstrap/Form';
+import { Toast } from 'react-bootstrap';
+import {Link, useSearchParams} from "@remix-run/react";
+import { useState } from 'react';
 
+import {ORIGIN} from "~/consts";
+
+function Login() {
+    const [showWarnToast, setShowWarnToast] = useState(true);
+    const closeWarnToast = () => setShowWarnToast(false);
+>>>>>>> Stashed changes
+
+    const [searchPrams] = useSearchParams();
+    const failedMessage = searchPrams.get("failed");
     return (
+<<<<<<< Updated upstream
         <div className={"flex h-[100vh] items-center justify-center"}>
             <Form className={"border-solid border-4 rounded-2xl p-5 w-[80%]"} onSubmit={onSubmit}>
                 <Form.Group className="mb-3" controlId="formEmail">
@@ -51,6 +68,48 @@ function Login() {
                 </div>
             </Form>
         </div>
+=======
+        <>
+            <div className={"flex h-[100vh] items-center justify-center flex-row"}>
+                <Form className={"border-solid border-4 rounded-2xl p-5 w-[80%]"} action="http://localhost:8000/login" method="POST">
+                    <Form.Group className="mb-3" controlId="formEmail">
+                        <Form.Label>メールアドレス</Form.Label>
+                        <Form.Control type="email" name="email" placeholder="メールアドレスを入れてください" required />
+                    </Form.Group>
+
+                    <Form.Group className="mb-3" controlId="formPassword">
+                        <Form.Label>パスワード</Form.Label>
+                        <Form.Control type="password" name="password" placeholder="パスワードを入れてください" required />
+                    </Form.Group>
+                    <Form.Group className="mb-3" controlId="formNext">
+                        <Form.Control type="hidden" name="next" value={ORIGIN + "/library"}/>
+                    </Form.Group>
+                    <Form.Group className="mb-3" controlId="formFailed">
+                        <Form.Control type="hidden" name="failed" value={ORIGIN + "/login"}/>
+                    </Form.Group>
+                    <div className="flex flex-row justify-between">
+                        <Link className="no-underline" to={"/create-account"}>アカウント作成はこちら</Link>
+                        <Button variant="primary" type="submit" className={"inline"}>
+                            ログイン
+                        </Button>
+                    </div>
+                </Form>
+            </div>
+            {failedMessage
+                ?<Toast
+                    className="absolute left-2 bottom-2"
+                    bg="danger"
+                    onClose={closeWarnToast}
+                    show={showWarnToast}
+                    delay={3000}
+                    autohide
+                >
+                    <Toast.Body>{failedMessage}</Toast.Body>
+                </Toast>
+                : undefined
+            }
+        </>
+>>>>>>> Stashed changes
     );
 }
 

@@ -9,6 +9,7 @@ function Index() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        console.log(import.meta.env.VITE_BACKEND_URL);
         (async () => {
             setIsLoading(true);
             setIsLoggedIn(await checkLogin());

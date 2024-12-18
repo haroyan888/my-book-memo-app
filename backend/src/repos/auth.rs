@@ -1,9 +1,9 @@
+use axum::async_trait;
 use axum_login::{AuthnBackend, UserId};
 use password_auth::verify_password;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use tokio::task;
-use axum::async_trait;
 use validator::Validate;
 
 use crate::entity::user::User;
@@ -13,8 +13,13 @@ use crate::modules::validate_json::validate_password;
 pub struct Credentials {
 	#[validate(email)]
 	pub email: String,
-	#[validate(length(min = 1, max = 255), custom(function="validate_password"))]
+	#[validate(length(min = 1, max = 255), custom(function = "validate_password"))]
 	pub password: String,
+<<<<<<< Updated upstream
+=======
+	pub next: String,
+	pub failed: String,
+>>>>>>> Stashed changes
 }
 
 #[derive(Debug, Clone)]
@@ -55,7 +60,7 @@ impl AuthnBackend for AuthRepositoryForPg {
 		task::spawn_blocking(|| {
 			Ok(user.filter(|user| verify_password(creds.password, &user.password).is_ok()))
 		})
-			.await?
+		.await?
 	}
 
 	async fn get_user(&self, user_id: &UserId<Self>) -> Result<Option<Self::User>, Self::Error> {
@@ -77,27 +82,22 @@ impl AuthRepositoryForPg {
 
 		Ok(user)
 	}
-	pub async fn create_account(
-		&self,
-		credentials: Credentials
-	) -> Result<User, Error> {
+	pub async fn create_account(&self, credentials: Credentials) -> Result<User, Error> {
 		let id = uuid::Uuid::new_v4().to_string();
 		let hashed_password = password_auth::generate_hash(&credentials.password);
 		// ユーザを作成
-		let user: User = sqlx::query_as("insert into users(id, email, password) values ($1, $2, $3) returning *;")
-			.bind(id)
-			.bind(&credentials.email)
-			.bind(hashed_password)
-			.fetch_one(&self.db)
-			.await?;
+		let user: User =
+			sqlx::query_as("insert into users(id, email, password) values ($1, $2, $3) returning *;")
+				.bind(id)
+				.bind(&credentials.email)
+				.bind(hashed_password)
+				.fetch_one(&self.db)
+				.await?;
 
 		Ok(user)
 	}
 
-	pub async fn delete_account(
-		&self,
-		id: &str
-	) -> Result<(), Error> {
+	pub async fn delete_account(&self, id: &str) -> Result<(), Error> {
 		sqlx::query("delete from users where id = $1;")
 			.bind(id)
 			.execute(&self.db)
